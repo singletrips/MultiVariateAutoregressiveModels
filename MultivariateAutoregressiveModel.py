@@ -7,6 +7,7 @@ Created on Sun Mar 22 05:04:24 2015
 
 import numpy as np
 import statsmodels
+import scipy as sc
 
 class MultivariateAutoregressiveModel(object):
     def __init__(self,timeseries_matrix):
@@ -124,58 +125,78 @@ class Connectivity(object):
         """
         A = self.A()
         return np.abs(A / np.sqrt(np.sum(A.conj() * A, axis=0, keepdims=True)))
+        
+class Simulation(object):
+    def __init__(self, model_order,parameters,nr_of_variables, time_series_length):
+        self.model_order =  model_order
+        self.parameters  = parameters
+        self.nr_of_variables  = nr_of_variables
+        self.time_series_length = time_series_length
+        
+    def univariate_simulation(self):
+        noise_var = 1**2
+        noise = sqrt(noise_var)*np.random.rand(1,self.time_series_length)
+        b = np.ones(1+len(self.parameters))
+        a = np.squeeze(np.array([[1]+self.parameters]))
+        y = sc.signal.lfilter(b,a,noise,axis=0)
+        return y
 
 ##########################################
 
-from scipy import io
+sim = Simulation(5,[-1.8517,1.3741,0.1421,-0.6852,0.3506],1,640)
+y = sim.univariate_simulation()
 
-'''
-fMRI data obtained from
-http://www.nimh.nih.gov/labs-at-nimh/research-areas/clinics-and-labs/chp/research-articles.shtml
-It's data from healthy controls and patients with childhood onset schizophrenia.
-'''
+##########################################
 
-data=io.loadmat('NV_COS_data.mat')
-timeseries_mat=data['NVdata']['timeseries'][0][0][0][0]
-print timeseries_mat.shape
-timeseries_mat = timeseries_mat.T
-print timeseries_mat.shape
-    
-for j in range(0,timeseries_mat.shape[0]):
-    timeseries_mat[j,:]=np.subtract(timeseries_mat[j,:],np.mean(timeseries_mat[j,:]))
- 
-autoregr= MultivariateAutoregressiveModel(timeseries_mat)
-weights, y_pred, ssr, noise_cov = autoregr.ridge_regression_fit(2,alpha=0) 
-
-conn = Connectivity(weights,noise_cov)
-PDC = conn.PDC()
-
-'''
-Experimenting with stasmodels
-'''
-
-#model = statsmodels.tsa.vector_ar.var_model.VAR(timeseries_mat[:,0:128])
+#from scipy import io
+#
+#'''
+#fMRI data obtained from
+#http://www.nimh.nih.gov/labs-at-nimh/research-areas/clinics-and-labs/chp/research-articles.shtml
+#It's data from healthy controls and patients with childhood onset schizophrenia.
+#'''
+#
+#data=io.loadmat('NV_COS_data.mat')
+#timeseries_mat=data['NVdata']['timeseries'][0][0][0][0]
+#print timeseries_mat.shape
+#timeseries_mat = timeseries_mat.T
+#print timeseries_mat.shape
+#    
+#for j in range(0,timeseries_mat.shape[0]):
+#    timeseries_mat[j,:]=np.subtract(timeseries_mat[j,:],np.mean(timeseries_mat[j,:]))
+# 
+#autoregr= MultivariateAutoregressiveModel(timeseries_mat)
+#weights, y_pred, ssr, noise_cov = autoregr.ridge_regression_fit(2,alpha=0) 
+#
+#conn = Connectivity(weights,noise_cov)
+#PDC = conn.PDC()
+#
+#'''
+#Experimenting with stasmodels
+#'''
+#
+##model = statsmodels.tsa.vector_ar.var_model.VAR(timeseries_mat[:,0:128])
+##results=model.fit(2)
+##print results.bic
+#
+#import statsmodels
+#import statsmodels.api as sm
+#from statsmodels.sandbox.tools import pca
+#
+#
+##Take PCA, because there are more brain regions
+##than lenght of time series
+#xred, fact, eva, eve  = pca(timeseries_mat, keepdim=3, normalize=1)
+##fact_wconst = sm.add_constant(fact[:,:10], prepend=False)
+#print eva
+#
+##fact_wconst = sm.add_constant(fact, prepend=False)
+#z=np.real(fact)
+#model = statsmodels.tsa.vector_ar.var_model.VAR(z)
 #results=model.fit(2)
 #print results.bic
-
-import statsmodels
-import statsmodels.api as sm
-from statsmodels.sandbox.tools import pca
-
-
-#Take PCA, because there are more brain regions
-#than lenght of time series
-xred, fact, eva, eve  = pca(timeseries_mat, keepdim=3, normalize=1)
-#fact_wconst = sm.add_constant(fact[:,:10], prepend=False)
-print eva
-
-#fact_wconst = sm.add_constant(fact, prepend=False)
-z=np.real(fact)
-model = statsmodels.tsa.vector_ar.var_model.VAR(z)
-results=model.fit(2)
-print results.bic
-
-
-autoregr= MultivariateAutoregressiveModel(fact)
-weights, y_pred, residual, noise_cov = autoregr.ridge_regression_fit(3,alpha=4) 
-print autoregr.information_criteria(noise_cov,3)
+#
+#
+#autoregr= MultivariateAutoregressiveModel(fact)
+#weights, y_pred, residual, noise_cov = autoregr.ridge_regression_fit(3,alpha=4) 
+#print autoregr.information_criteria(noise_cov,3)
