@@ -140,14 +140,39 @@ class Simulation(object):
         a = np.squeeze(np.array([[1]+self.parameters]))
         y = sc.signal.lfilter(b,a,noise,axis=0)
         return y
+        
 
 ##########################################
 
-sim = Simulation(5,[-1.8517,1.3741,0.1421,-0.6852,0.3506],1,640)
-y = sim.univariate_simulation()
+#sim = Simulation(5,[-1.8517,1.3741,0.1421,-0.6852,0.3506],1,640)
+#y = sim.univariate_simulation()
 
-##########################################
+########################################## 
+def generate_next_time_point(lag_tensor,time_window):
+    components=[]
+    for j in range(0,lag_tensor.shape[0]):
+        components.append(np.dot(lag_tensor[j,:,:], time_window[j,:]))
+        
+    prediction = np.sum(components,axis=0)
 
+    return prediction
+    
+def initial_simulation():
+    noise = np.random.rand(2,2)
+    print noise
+    noise = np.array([[1,1],[1,1]])
+    act_act = np.array([2,2])
+    inh_act = np.array([0.5,2])
+    inh_inh = np.array([0.5,0.5])
+    act_inh = np.array([2,0.5])
+    
+    lag_tensor=np.array([[[act_act,inh_act]],[[inh_inh,act_inh]]])
+    
+    observation = generate_next_time_point(lag_tensor,noise)
+    print observation
+    #for j in range(0,10):
+    
+two_vars()
 #from scipy import io
 #
 #'''
