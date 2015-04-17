@@ -152,27 +152,24 @@ def generate_next_time_point(lag_tensor,time_window):
     components=[]
     for j in range(0,lag_tensor.shape[0]):
         components.append(np.dot(lag_tensor[j,:,:], time_window[j,:]))
-        
     prediction = np.sum(components,axis=0)
 
     return prediction
     
 def initial_simulation():
-    noise = np.random.rand(2,2)
-    print noise
-    noise = np.array([[1,1],[1,1]])
+    initial_condition = np.random.rand(2,2)
+    initial_condition = np.array([[1,1],[1,1]])
     act_act = np.array([2,2])
-    inh_act = np.array([0.5,2])
-    inh_inh = np.array([0.5,0.5])
-    act_inh = np.array([2,0.5])
+    inh_act = np.array([-0.5,2])
+    inh_inh = np.array([-0.5,-0.5])
+    act_inh = np.array([2,-0.5])
     
     lag_tensor=np.array([[[act_act,inh_act]],[[inh_inh,act_inh]]])
-    
-    observation = generate_next_time_point(lag_tensor,noise)
-    print observation
-    #for j in range(0,10):
-    
-two_vars()
+    for j in range(0,100):
+        next_time_point= generate_next_time_point(lag_tensor,initial_condition[-2:,:])
+        initial_condition=np.append(initial_condition,next_time_point,axis=0)
+    print initial_condition
+initial_simulation()
 #from scipy import io
 #
 #'''
